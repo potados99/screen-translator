@@ -14,9 +14,9 @@ jobs:
 
       - name: Setup Git
         run: |
-          git config --global url."https://user:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "https://github.com"
-          git config --global user.name github-actions
-          git config --global user.email github-actions@github.com          
+          git config --global url."https://potados99:${{ secrets.PAT }}@github.com".insteadOf "https://github.com"
+          git config --global user.name potados99
+          git config --global user.email potados99@gmail.com        
 
       - name: Run release script
         shell: pwsh
