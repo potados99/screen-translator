@@ -7,7 +7,7 @@ param (
 
 $appName = "ScreenTranslator" # 👈 Replace with your application project name.
 $projDir = "ScreenTranslator" # 👈 Replace with your project directory (where .csproj resides).
-$distRepo = "git@github.com:potados99/distribution.git"
+$distRepo = "https://github.com/potados99/distribution.git"
 
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
@@ -52,7 +52,7 @@ try {
         $msBuildVerbosityArg
 
     # Measure publish size.
-    $publishSize = (Get-ChildItem -Path "$publishDir/Application Files" -Recurse |
+    $publishSize = (Get-ChildItem -Path "$pubklishDir/Application Files" -Recurse |
         Measure-Object -Property Length -Sum).Sum / 1Mb
     Write-Output ("Published size: {0:N2} MB" -f $publishSize)
 }
