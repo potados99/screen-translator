@@ -68,7 +68,14 @@ if ($OnlyBuild) {
 # Clone distribution repository.
 git clone $distRepo --depth 1 "distribution"
 
-Push-Location "distribution"
+# Enter the repository.
+Push-Location "distribution/ScreenTranslator"
+
+# Use CRLF only.
+# It will prevent hashes from being changed due to line-end converts.
+git config core.eol native
+git config core.autocrlf false
+
 try {
     # Remove previous application files.
     Write-Output "Removing previous files..."
@@ -81,8 +88,8 @@ try {
 
     # Copy new application files.
     Write-Output "Copying new files..."
-    Copy-Item -Path "../$outDir/Application Files","../$outDir/$appName.application" `
-        -Destination "./ScreenTranslator" -Recurse
+    Copy-Item -Path "../../$outDir/Application Files","../../$outDir/$appName.application" `
+        -Destination . -Recurse
 
     # Stage and commit.
     Write-Output "Staging..."
