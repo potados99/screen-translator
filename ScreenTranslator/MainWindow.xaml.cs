@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
@@ -39,14 +40,16 @@ namespace ScreenTranslator
         
         private async Task<SoftwareBitmap> GetScreenshot()
         {
-            var screenLeft = SystemParameters.VirtualScreenLeft;
-            var screenTop = SystemParameters.VirtualScreenTop;
-            var screenWidth = SystemParameters.VirtualScreenWidth;
-            var screenHeight = SystemParameters.VirtualScreenHeight;
+            var screenLeft = 0;
+            var screenTop = 0;
+            var screenWidth = Screen.PrimaryScreen.Bounds.Width;
+            var screenHeight = Screen.PrimaryScreen.Bounds.Height;
 
             using var bitmap = new Bitmap((int) screenWidth, (int) screenHeight);
             using var g = Graphics.FromImage(bitmap);
             g.CopyFromScreen((int) screenLeft, (int) screenTop, 0, 0, bitmap.Size);
+
+            bitmap.Save("Capture.png", ImageFormat.Png);
 
             using var stream = new InMemoryRandomAccessStream();
             bitmap.Save(stream.AsStream(),
