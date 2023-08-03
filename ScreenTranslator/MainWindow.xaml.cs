@@ -49,7 +49,7 @@ namespace ScreenTranslator
             using var g = Graphics.FromImage(bitmap);
             g.CopyFromScreen((int) screenLeft, (int) screenTop, 0, 0, bitmap.Size);
 
-            bitmap.Save("Capture.png", ImageFormat.Png);
+            // bitmap.Save("Capture.png", ImageFormat.Png);
 
             using var stream = new InMemoryRandomAccessStream();
             bitmap.Save(stream.AsStream(),
