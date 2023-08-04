@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,13 @@ using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Brushes = System.Windows.Media.Brushes;
+using Font = System.Drawing.Font;
 using Color = System.Drawing.Color;
+using FlowDirection = System.Windows.FlowDirection;
+using FontFamily = System.Drawing.FontFamily;
+using Point = System.Drawing.Point;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace ScreenTranslator
 {
@@ -37,7 +44,7 @@ namespace ScreenTranslator
         }
 
         private OcrResult Result;
-        
+
         private async Task<SoftwareBitmap> GetScreenshot()
         {
             var screenLeft = 0;
@@ -73,22 +80,64 @@ namespace ScreenTranslator
             Result = ocrResult;
         }
 
+
         private void Draw()
         {
             var g = Graphics.FromHwnd(IntPtr.Zero);
+            var fontFamily = "Arial";
+
             foreach (var line in Result.Lines)
             {
                 foreach (var word in line.Words)
                 {
-                    g.DrawString(
-                        word.Text,
-                        new Font("Arial", 14),
-                        new SolidBrush(Color.Yellow),
-                        (float)word.BoundingRect.X, 
-                        (float)word.BoundingRect.Y
+                    var text = word.Text;
+                    var rect = word.BoundingRect;
+
+                    g.FillRectangle(
+                        new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(128, 0, 0, 0)),
+                        new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height)
+                    );
+
+                    var fontSize = GetProperFontSize(text, (int)rect.Height, fontFamily);
+                    TextRenderer.DrawText(
+                        g,
+                        text,
+                        new Font(fontFamily, fontSize),
+                        new Point((int)rect.X, (int)rect.Y),
+                        Color.Yellow
                     );
                 }
             }
+        }
+
+        private int GetProperFontSize(string text, int designatedHeight, string typeface)
+        {
+            var maxFontSize = 1;
+            var ft = new FormattedText(
+                text,
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface(typeface),
+                maxFontSize,
+                Brushes.Black,
+                VisualTreeHelper.GetDpi(this).PixelsPerDip
+            );
+            while (true)
+            {
+                ft.SetFontSize(maxFontSize);
+                if (ft.Height > designatedHeight)
+                {
+                    //Too large! Maxmimum size found one step before
+                    maxFontSize--;
+                    break;
+                }
+                else
+                {
+                    maxFontSize++;
+                }
+            }
+
+            return Math.Max(maxFontSize - 6, 1);
         }
     }
 }
