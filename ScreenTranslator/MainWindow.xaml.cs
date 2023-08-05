@@ -28,6 +28,7 @@ using FlowDirection = System.Windows.FlowDirection;
 using FontFamily = System.Drawing.FontFamily;
 using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
+using ScreenTranslator.Lib.OCR;
 
 namespace ScreenTranslator
 {
@@ -43,7 +44,7 @@ namespace ScreenTranslator
             Read().ContinueWith(_ => Draw());
         }
 
-        private OcrResult Result;
+        private OcrProcessedResult Result;
 
         private async Task<SoftwareBitmap> GetScreenshot()
         {
@@ -77,37 +78,52 @@ namespace ScreenTranslator
             var engine = OcrEngine.TryCreateFromLanguage(language);
             var ocrResult = await engine.RecognizeAsync(bitmap).AsTask();
 
-            Result = ocrResult;
+            Result = new WindowsOcrResultProcessor().Process(ocrResult);
         }
-
 
         private void Draw()
         {
             var g = Graphics.FromHwnd(IntPtr.Zero);
             var fontFamily = "Arial";
 
-            foreach (var line in Result.Lines)
+            foreach (var paragraph in Result.Paragraphs)
             {
-                foreach (var word in line.Words)
+                FillRect(g, paragraph.BoundingRect, Color.FromArgb(128, 0, 255, 0));
+
+                foreach (var line in paragraph.Lines)
                 {
-                    var text = word.Text;
-                    var rect = word.BoundingRect;
+                    FillRect(g, line.BoundingRect, Color.FromArgb(128, 0, 0, 255));
 
-                    g.FillRectangle(
-                        new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(128, 0, 0, 0)),
-                        new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height)
-                    );
+                    foreach (var word in line.Words)
+                    {
+                        FillRect(g, word.BoundingRect, Color.FromArgb(128, 255, 0, 0));
 
-                    var fontSize = GetProperFontSize(text, (int)rect.Height, fontFamily);
-                    TextRenderer.DrawText(
-                        g,
-                        text,
-                        new Font(fontFamily, fontSize),
-                        new Point((int)rect.X, (int)rect.Y),
-                        Color.Yellow
-                    );
+                        var text = word.Text;
+                        var rect = word.BoundingRect;
+
+                        var fontSize = GetProperFontSize(text, (int) rect.Height, fontFamily);
+                        TextRenderer.DrawText(
+                            g,
+                            text,
+                            new Font(fontFamily, fontSize),
+                            new Point((int) rect.X, (int) rect.Y),
+                            Color.Yellow
+                        );
+                    }
                 }
             }
+        }
+
+        private void FillRect(Graphics g, Rectangle rect, Color color)
+        {
+            g.FillRectangle(
+                new System.Drawing.SolidBrush(color),
+                new Rectangle(
+                    (int) rect.X,
+                    (int) rect.Y,
+                    (int) rect.Width,
+                    (int) rect.Height)
+            );
         }
 
         private int GetProperFontSize(string text, int designatedHeight, string typeface)
