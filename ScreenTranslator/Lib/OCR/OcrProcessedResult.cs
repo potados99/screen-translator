@@ -2,7 +2,7 @@
 
 namespace ScreenTranslator.Lib.OCR
 {
-    internal class OcrProcessedResult
+    public class OcrProcessedResult
     {
         public IReadOnlyList<OcrProcessedParagraph> Paragraphs { get; set; }
     }

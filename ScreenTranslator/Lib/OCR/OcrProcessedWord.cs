@@ -2,7 +2,7 @@
 
 namespace ScreenTranslator.Lib.OCR
 {
-    internal class OcrProcessedWord
+    public class OcrProcessedWord
     {
         public Rectangle BoundingRect { get; init; }
 

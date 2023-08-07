@@ -1,22 +1,15 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Media;
 using Windows.Globalization;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
 using Windows.Storage.Streams;
-using Brushes = System.Windows.Media.Brushes;
-using Font = System.Drawing.Font;
-using Color = System.Drawing.Color;
-using FlowDirection = System.Windows.FlowDirection;
-using Point = System.Drawing.Point;
-using Rectangle = System.Drawing.Rectangle;
+using ScreenTranslator.Lib.Drawing;
 using ScreenTranslator.Lib.OCR;
 
 namespace ScreenTranslator
@@ -30,11 +23,24 @@ namespace ScreenTranslator
         {
             InitializeComponent();
 
-            Read().ContinueWith(_ => Draw());
+            Read().ContinueWith(t => new Drawer(this).Draw(t.Result));
         }
+        
+        private async Task<OcrProcessedResult> Read()
+        {
+            var language = new Language("ko");
+            if (!OcrEngine.IsLanguageSupported(language))
+            {
+                throw new Exception($"{language.LanguageTag} is not supported in this system.");
+            }
 
-        private OcrProcessedResult Result;
+            var bitmap = await GetScreenshot();
+            var engine = OcrEngine.TryCreateFromLanguage(language);
+            var ocrResult = await engine.RecognizeAsync(bitmap).AsTask();
 
+            return new WindowsOcrResultProcessor().Process(ocrResult);
+        }
+        
         private async Task<SoftwareBitmap> GetScreenshot()
         {
             var screenLeft = 0;
@@ -53,96 +59,6 @@ namespace ScreenTranslator
                 ImageFormat.Jpeg); //choose the specific image format by your own bitmap source
             var decoder = await BitmapDecoder.CreateAsync(stream);
             return await decoder.GetSoftwareBitmapAsync();
-        }
-
-        private async Task Read()
-        {
-            var language = new Language("ko");
-            if (!OcrEngine.IsLanguageSupported(language))
-            {
-                throw new Exception($"{language.LanguageTag} is not supported in this system.");
-            }
-
-            var bitmap = await GetScreenshot();
-            var engine = OcrEngine.TryCreateFromLanguage(language);
-            var ocrResult = await engine.RecognizeAsync(bitmap).AsTask();
-
-            Result = new WindowsOcrResultProcessor().Process(ocrResult);
-        }
-
-        private void Draw()
-        {
-            var g = Graphics.FromHwnd(IntPtr.Zero);
-            var fontFamily = "Arial";
-
-            foreach (var paragraph in Result.Paragraphs)
-            {
-                FillRect(g, paragraph.BoundingRect, Color.FromArgb(128, 0, 255, 0));
-
-                foreach (var line in paragraph.Lines)
-                {
-                    FillRect(g, line.BoundingRect, Color.FromArgb(128, 0, 0, 255));
-
-                    foreach (var word in line.Words)
-                    {
-                        FillRect(g, word.BoundingRect, Color.FromArgb(128, 255, 0, 0));
-
-                        var text = word.Text;
-                        var rect = word.BoundingRect;
-
-                        var fontSize = GetProperFontSize(text, (int) rect.Height, fontFamily);
-                        TextRenderer.DrawText(
-                            g,
-                            text,
-                            new Font(fontFamily, fontSize),
-                            new Point((int) rect.X, (int) rect.Y),
-                            Color.Yellow
-                        );
-                    }
-                }
-            }
-        }
-
-        private void FillRect(Graphics g, Rectangle rect, Color color)
-        {
-            g.FillRectangle(
-                new System.Drawing.SolidBrush(color),
-                new Rectangle(
-                    (int) rect.X,
-                    (int) rect.Y,
-                    (int) rect.Width,
-                    (int) rect.Height)
-            );
-        }
-
-        private int GetProperFontSize(string text, int designatedHeight, string typeface)
-        {
-            var maxFontSize = 1;
-            var ft = new FormattedText(
-                text,
-                CultureInfo.CurrentCulture,
-                FlowDirection.LeftToRight,
-                new Typeface(typeface),
-                maxFontSize,
-                Brushes.Black,
-                VisualTreeHelper.GetDpi(this).PixelsPerDip
-            );
-            while (true)
-            {
-                ft.SetFontSize(maxFontSize);
-                if (ft.Height > designatedHeight)
-                {
-                    //Too large! Maxmimum size found one step before
-                    maxFontSize--;
-                    break;
-                }
-                else
-                {
-                    maxFontSize++;
-                }
-            }
-
-            return Math.Max(maxFontSize - 3, 1);
         }
     }
 }

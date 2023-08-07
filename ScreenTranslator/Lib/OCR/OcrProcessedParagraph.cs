@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace ScreenTranslator.Lib.OCR
 {
-    internal class OcrProcessedParagraph
+    public class OcrProcessedParagraph
     {
         public IReadOnlyList<OcrProcessedLine> Lines { get; init; }
 
