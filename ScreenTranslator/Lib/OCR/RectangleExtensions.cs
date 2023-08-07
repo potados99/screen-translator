@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScreenTranslator.Lib.OCR
 {
@@ -16,6 +13,21 @@ namespace ScreenTranslator.Lib.OCR
                 (int)rect.Width,
                 (int)rect.Height
                 );
+        }
+
+        public static System.Drawing.Rectangle ContainingRect(this IEnumerable<System.Drawing.Rectangle> rects)
+        {
+            var lefts = rects.Select(r => r.Left);
+            var tops = rects.Select(r => r.Top);
+            var rights = rects.Select(r => r.Right);
+            var bottoms = rects.Select(r => r.Bottom);
+
+            return System.Drawing.Rectangle.FromLTRB(
+                lefts.Min(),
+                tops.Min(),
+                rights.Max(),
+                bottoms.Max()
+            );
         }
     }
 }
