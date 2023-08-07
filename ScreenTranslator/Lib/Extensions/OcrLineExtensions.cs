@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using Windows.Media.Ocr;
+using ScreenTranslator.Lib.OCR;
 
-namespace ScreenTranslator.Lib.OCR;
+namespace ScreenTranslator.Lib.Extensions;
 
 public static class OcrLineExtensions
 {

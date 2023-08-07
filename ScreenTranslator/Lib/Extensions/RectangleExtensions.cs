@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace ScreenTranslator.Lib.OCR
+namespace ScreenTranslator.Lib.Extensions
 {
     public static class RectangleExtensions
     {
